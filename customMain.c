@@ -25,11 +25,24 @@ void customMain(void)
       // Raise arm
       SetServo(PIN_MOTOR_SERVO, 127);
 
+      // Go to beacon
       while (GetDigitalInput(PIN_DIO_LIMITSWITCH)) // while limit switch unpressed
       {
             Read_PD();
             find_max();
             move();
       }
-      SetServo(PIN_MOTOR_SERVO, 120);
+
+      // Stop driving
+      StopRobot();
+
+      // Drop arm
+      size_t arm_position;
+      for (arm_position = 0; arm_position < ARM_DOWN; arm_position += 10)
+      {
+            SetServo(PIN_MOTOR_SERVO, limit_pwm(arm_position));
+            Wait(100);
+      }
+
+      // Raise arm
 }
