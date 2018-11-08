@@ -29,3 +29,9 @@ void move(void)
       temp = limit_pwm(0 + steer - speed);
       SetMotor(PIN_MOTOR_RIGHT, temp);
 }
+
+void stopDriving()
+{
+      SetMotor(PIN_MOTOR_RIGHT, 0);
+      SetMotor(PIN_MOTOR_LEFT, 0);
+}
