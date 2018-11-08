@@ -1,6 +1,8 @@
 #include "Main.h"
 
 void goToBeacon(int color);
+void turnOffBeacon(void);
+void dropArm(int stepSize, int stepDelay);
 
 /******************************************************************************
  * Missions:
@@ -21,36 +23,14 @@ void customMain(void)
       slow_speed = 25;        // slow speed, used in 'move'
       spin_speed = 50;        // spin speed (for searching mode), used in 'move'
 
-      int arm_position;
-
       // Raise arm
       SetServo(PIN_MOTOR_SERVO, ARM_UP);
 
       // Go to red beacon and stop
       goToBeacon(0);
 
-      // Turn off red beacon
-      while (1)
-      {
-            // Drop arm
-            // SetServo(PIN_MOTOR_SERVO, ARM_DOWN);
-            for (arm_position = ARM_UP; arm_position > ARM_DOWN; arm_position -= 10)
-            {
-                  SetServo(PIN_MOTOR_SERVO, limit_pwm(arm_position));
-                  Wait(100);
-            }
-
-            // Raise arm
-            SetServo(PIN_MOTOR_SERVO, ARM_UP);
-            Wait(500);
-
-            // exit loop if beacon is off
-            Read_PD();
-            if (PD_sum <= ambient_level)
-            {
-                  break;
-            }
-      }
+      // Turn off beacon (loop)
+      turnOffBeacon();
 
       //Back up so we don't hit red beacon
       SetMotor(PIN_MOTOR_LEFT, forward_speed * -1);
@@ -62,6 +42,7 @@ void customMain(void)
 
       // Capture green beacon
       {
+            int arm_position;
             // Drop arm
             for (arm_position = ARM_UP; arm_position > ARM_DOWN; arm_position -= 10)
             {
@@ -70,18 +51,53 @@ void customMain(void)
             }
       }
 
-      //Back up so we don't hit red beacon
-      Wait(1000);
-
       // Leave arena
-      while (1)
       {
-            // Reverse
-            SetMotor(PIN_MOTOR_LEFT, forward_speed * -1);
-            SetMotor(PIN_MOTOR_RIGHT, forward_speed);
+            int ultrasonic_left_distance;
+            int ultrasonic_right_distance;
 
-            // If within 5cm of a wall, turn away from it slightly
+            // Turn on right ultrasonic
+            StartUltrasonic(PIN_DIO_ULTRASONIC_RIGHT_OUTPUT, PIN_DIO_ULTRASONIC_RIGHT_INPUT);
+            // Turn on left ultrasonic
+            StartUltrasonic(PIN_DIO_ULTRASONIC_LEFT_OUTPUT, PIN_DIO_ULTRASONIC_LEFT_INPUT);
+
+            int direction = 0; // 0 = unknown, -1 = go left, 1 = go right
+            while (1)
+            {
+                  ultrasonic_left_distance = GetUltrasonicCm(
+                      PIN_DIO_ULTRASONIC_LEFT_OUTPUT,
+                      PIN_DIO_ULTRASONIC_LEFT_INPUT);
+
+                  ultrasonic_right_distance = GetUltrasonicCm(
+                      PIN_DIO_ULTRASONIC_RIGHT_OUTPUT,
+                      PIN_DIO_ULTRASONIC_RIGHT_INPUT);
+
+                  // PrintToScreen("Left dist: %d, Right dist: %d\n", ultrasonic_left_distance, ultrasonic_right_distance);
+
+                  switch (direction)
+                  {
+                  case 0: // Haven't found a wall yet
+
+                        // Go straight until we find a wall
+                        left_speed = forward_speed * -1;
+                        right_speed = forward_speed;
+                        break;
+
+                  default:
+                        break;
+                  }
+                  while (ultrasonic_left_distance < 15 && ultrasonic_right_distance < 15)
+                  {
+                  }
+
+                  // If approaching on ONE side, turn away from it
+                  // If approaching on BOTH sides, turn sharply
+                  SetMotor(PIN_MOTOR_LEFT, forward_speed * -1);
+                  SetMotor(PIN_MOTOR_RIGHT, forward_speed);
+
+                  Wait(2000);
             }
+      }
 }
 
 /**
@@ -99,4 +115,35 @@ void goToBeacon(int color)
 
       // Stop driving
       stopDriving();
+}
+
+void dropArm(int stepSize, int stepDelay)
+{
+      int arm_position;
+      for (arm_position = ARM_UP; arm_position > ARM_DOWN; arm_position += stepSize)
+      {
+            SetServo(PIN_MOTOR_SERVO, limit_pwm(arm_position));
+            Wait(stepDelay);
+      }
+}
+
+void turnOffBeacon(void)
+{
+      // Turn off red beacon
+      while (1)
+      {
+            // Drop arm
+            dropArm(-10, 100);
+
+            // Raise arm
+            SetServo(PIN_MOTOR_SERVO, ARM_UP);
+            Wait(500);
+
+            // exit loop if beacon is off
+            Read_PD();
+            if (PD_sum <= ambient_level)
+            {
+                  break;
+            }
+      }
 }

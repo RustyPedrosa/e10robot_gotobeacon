@@ -1,0 +1,2 @@
+customMain.c: In function 'customMain':
+customMain.c line# 63:11: warning: unused variable 'direction'
