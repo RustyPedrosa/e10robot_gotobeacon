@@ -15,8 +15,8 @@ void customMain(void)
       stop_level = 6000;      // used in 'move'
       expose_time = 3;        // used in expose_and_read
       steer_sensitivity = 20; // used in 'move'
-      forward_speed = 35;     // forward speed, used in 'move'
-      slow_speed = 25;        // slow speed, used in 'move'
+      forward_speed = 75;     // forward speed, used in 'move'
+      slow_speed = 50;        // slow speed, used in 'move'
       spin_speed = 50;        // spin speed (for searching mode), used in 'move'
 
       freq = 0;                   // 0=1khz (red), 1=10kHz(green beacon)
