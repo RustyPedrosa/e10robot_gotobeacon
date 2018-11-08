@@ -2,6 +2,8 @@
 #ifndef USERINCLUDE_H_
 #define USERINCLUDE_H_
 
+#include <stdbool.h>
+
 /******************************************************************************
  * Constants
  *****************************************************************************/
@@ -18,7 +20,7 @@
 
 void customMain(void);
 void Read_PD(void);
-int expose_and_read(void);
+int expose_and_read(bool);
 void find_max(void);
 void move(void);
 int limit_pwm(int temp);
