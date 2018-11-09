@@ -3,6 +3,7 @@
 void goToBeacon(int color);
 void turnOffBeacon(void);
 void dropArm(int stepSize, int stepDelay);
+void exitArena(void);
 
 /******************************************************************************
  * Missions:
@@ -41,63 +42,10 @@ void customMain(void)
       goToBeacon(1);
 
       // Capture green beacon
-      {
-            int arm_position;
-            // Drop arm
-            for (arm_position = ARM_UP; arm_position > ARM_DOWN; arm_position -= 10)
-            {
-                  SetServo(PIN_MOTOR_SERVO, limit_pwm(arm_position));
-                  Wait(100);
-            }
-      }
+      dropArm(-10, 100);
 
       // Leave arena
-      {
-            int ultrasonic_left_distance;
-            int ultrasonic_right_distance;
-
-            // Turn on right ultrasonic
-            StartUltrasonic(PIN_DIO_ULTRASONIC_RIGHT_OUTPUT, PIN_DIO_ULTRASONIC_RIGHT_INPUT);
-            // Turn on left ultrasonic
-            StartUltrasonic(PIN_DIO_ULTRASONIC_LEFT_OUTPUT, PIN_DIO_ULTRASONIC_LEFT_INPUT);
-
-            int direction = 0; // 0 = unknown, -1 = go left, 1 = go right
-            while (1)
-            {
-                  ultrasonic_left_distance = GetUltrasonicCm(
-                      PIN_DIO_ULTRASONIC_LEFT_OUTPUT,
-                      PIN_DIO_ULTRASONIC_LEFT_INPUT);
-
-                  ultrasonic_right_distance = GetUltrasonicCm(
-                      PIN_DIO_ULTRASONIC_RIGHT_OUTPUT,
-                      PIN_DIO_ULTRASONIC_RIGHT_INPUT);
-
-                  // PrintToScreen("Left dist: %d, Right dist: %d\n", ultrasonic_left_distance, ultrasonic_right_distance);
-
-                  switch (direction)
-                  {
-                  case 0: // Haven't found a wall yet
-
-                        // Go straight until we find a wall
-                        left_speed = forward_speed * -1;
-                        right_speed = forward_speed;
-                        break;
-
-                  default:
-                        break;
-                  }
-                  while (ultrasonic_left_distance < 15 && ultrasonic_right_distance < 15)
-                  {
-                  }
-
-                  // If approaching on ONE side, turn away from it
-                  // If approaching on BOTH sides, turn sharply
-                  SetMotor(PIN_MOTOR_LEFT, forward_speed * -1);
-                  SetMotor(PIN_MOTOR_RIGHT, forward_speed);
-
-                  Wait(2000);
-            }
-      }
+      exitArena();
 }
 
 /**
@@ -145,5 +93,70 @@ void turnOffBeacon(void)
             {
                   break;
             }
+      }
+}
+
+void exitArena(void)
+{
+      const int BASE_SPEED = 50;
+      int forward_speed;
+      int steer_speed; // Motor near wall goes faster, motor away from wall goes slower
+      int bonus_speed;
+
+      int ultrasonic_left_distance;
+      int ultrasonic_right_distance;
+
+      // Initialize ultrasonics
+      StartUltrasonic(PIN_DIO_ULTRASONIC_RIGHT_OUTPUT, PIN_DIO_ULTRASONIC_RIGHT_INPUT);
+      StartUltrasonic(PIN_DIO_ULTRASONIC_LEFT_OUTPUT, PIN_DIO_ULTRASONIC_LEFT_INPUT);
+
+      while (1)
+      {
+            // Read ultrasonics
+            ultrasonic_left_distance = GetUltrasonicCm(
+                PIN_DIO_ULTRASONIC_LEFT_OUTPUT,
+                PIN_DIO_ULTRASONIC_LEFT_INPUT);
+
+            ultrasonic_right_distance = GetUltrasonicCm(
+                PIN_DIO_ULTRASONIC_RIGHT_OUTPUT,
+                PIN_DIO_ULTRASONIC_RIGHT_INPUT);
+
+            // Reset values that will be calculated
+            forward_speed = 0;
+            steer_speed = 0;
+            bonus_speed = 0;
+
+            // If really close to a wall (head on or approaching a corner)
+            if (ultrasonic_left_distance < 5 && ultrasonic_right_distance < 5)
+            {
+                  // Steer only, no forward speed
+                  steer_speed = BASE_SPEED;
+            }
+            else
+            {
+                  // Go forward at least at base_speed
+                  forward_speed = BASE_SPEED;
+
+                  // TODO: Which one should be negative?
+                  if (ultrasonic_left_distance < 15)
+                  {
+                        // Steer away if approaching wall on left
+                        steer_speed = (15 - ultrasonic_left_distance) * 3;
+                  }
+                  else if (ultrasonic_right_distance < 15)
+                  {
+                        // Steer away if approaching wall on right
+                        steer_speed = -(15 - ultrasonic_left_distance) * -3;
+                  }
+                  else
+                  {
+                        // No walls nearby - go extra fast
+                        bonus_speed = 25;
+                  }
+            }
+
+            // TODO: Which one should be negative?
+            SetMotor(PIN_MOTOR_LEFT, 0 + steer_speed + forward_speed + bonus_speed);
+            SetMotor(PIN_MOTOR_RIGHT, 0 + steer_speed - forward_speed - bonus_speed);
       }
 }

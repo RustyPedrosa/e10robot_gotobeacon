@@ -31,6 +31,8 @@
 #define ARM_UP 127
 #define ARM_DOWN -12
 
+#define WALL_FOLLOW_DISTANCE_CM 10
+
 void customMain(void);
 void Read_PD(void);
 int expose_and_read(bool);
