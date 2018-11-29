@@ -14,13 +14,13 @@
 // #define PIN_DIO_RIGHTBUMPER 2
 #define PIN_DIO_LIMITSWITCH 1
 
-#define PIN_DIO_ULTRASONIC_RIGHT_OUTPUT 2 //
+#define PIN_DIO_ULTRASONIC_RIGHT_OUTPUT 3 //
 
-#define PIN_DIO_ULTRASONIC_RIGHT_INPUT 3 // Output to Control
+#define PIN_DIO_ULTRASONIC_RIGHT_INPUT 2 // Output to Control
 
-#define PIN_DIO_ULTRASONIC_LEFT_OUTPUT 4 //
+#define PIN_DIO_ULTRASONIC_LEFT_OUTPUT 5 //
 
-#define PIN_DIO_ULTRASONIC_LEFT_INPUT 6 //
+#define PIN_DIO_ULTRASONIC_LEFT_INPUT 4 //
 
 // Motor pins
 #define PIN_MOTOR_LEFT 8
@@ -29,9 +29,12 @@
 
 // Arm positions
 #define ARM_UP 127
-#define ARM_DOWN -12
+#define ARM_DOWN -24
 
 #define WALL_FOLLOW_DISTANCE_CM 10
+
+#define DISTANCE_CRASH_AVOID 40
+#define DISTANCE_STEER_START 80
 
 void customMain(void);
 void Read_PD(void);
